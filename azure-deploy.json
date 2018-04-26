@@ -1,0 +1,258 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "webAppName": {
+        "type": "string",
+        "minLength": 1,
+        "metadata": {
+          "description": "The name of the Web App"
+        }
+      },
+      "storageAccountName": {
+        "type": "string",
+        "metadata": {
+            "description": "Storage Account Name"
+        }
+    },
+        "visionAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Vision Account Name"
+            }
+        },
+
+      "webAppSKU": {
+        "type": "string",
+        "defaultValue": "Basic",
+        "allowedValues": [
+          "Free",
+          "Shared",
+          "Basic",
+          "Standard"
+        ],
+        "metadata": {
+          "description": "The Web App pricing tier"
+        }
+      },
+      "azureSearchname": {
+        "type": "string",
+        "metadata": {
+          "description": "The azure search instance name"
+        }
+      },
+      "azureSearchSku": {
+        "type": "string",
+        "defaultValue": "standard",
+        "allowedValues": [
+          "free",
+          "standard",
+          "standard2"
+        ],
+        "metadata": {
+          "description": "The azure search instance tier."
+        }
+    },
+    "SKU": {
+        "type": "string",
+        "metadata": {
+          "description": "SKU for Vision API"
+        },
+        "defaultValue": "S1",
+        "allowedValues": [
+          "F0",
+          "S1",
+          "S2",
+          "S3",
+          "S4"
+        ]
+      }
+    },
+    "variables": {
+        "hostingPlanName" : "docextractor1", 
+        "functionAppName": "docextractorapp1",
+        "storageAccountid": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "cognitiveservicesid": "[concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/', parameters('visionAccountName'))]",
+        "azuresearchid":"[resourceId('Microsoft.Search/searchServices', parameters('azureSearchname'))]"
+
+    },
+    "resources": [
+      {
+        "name": "[parameters('webAppName')]",
+        "type": "Microsoft.Web/serverfarms",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2014-06-01",
+        "dependsOn": [ ],
+        "tags": {
+          "displayName": "App Service Plan"
+        },
+        "properties": {
+          "name": "[parameters('webAppName')]",
+          "sku": "[parameters('webAppSKU')]",
+          "workerSize": 1,
+          "numberOfWorkers": 1
+        }
+      },
+      {
+        "name": "[parameters('webAppName')]",
+        "type": "Microsoft.Web/sites",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2015-08-01",
+        "dependsOn": [
+          "[concat('Microsoft.Web/serverfarms/', parameters('webAppName'))]",
+          "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+          "[resourceId('Microsoft.Search/searchServices', parameters('azureSearchname'))]"
+        ],
+        "properties": {
+          "name": "[parameters('webAppName')]",
+          "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('webAppName'))]",
+          "siteConfig": {
+            "appSettings": [
+                {
+                    "name": "SearchServiceName",
+                    "value": "[parameters('azureSearchname')]"
+                },
+                {
+                    "name": "SearchServiceKey",
+                    "value": "[listAdminKeys(variables('azuresearchid'), '2015-08-19').PrimaryKey]"
+                },
+                {
+                    "name": "StorageAccountConnectionString",
+                    "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+                }]
+            }
+        },
+        "resources": [
+          
+        ]
+      },
+      {
+        "type": "Microsoft.Storage/storageAccounts",
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "kind": "Storage",
+        "name": "[parameters('storageAccountName')]",
+        "apiVersion": "2017-10-01",
+        "location": "[resourceGroup().location]",
+        "dependsOn": []
+    },
+      {
+        "apiVersion": "2015-08-19",
+        "name": "[parameters('azureSearchname')]",
+        "type": "Microsoft.Search/searchServices",
+        "location": "[resourceGroup().location]",
+          "sku": {
+            "name": "[parameters('azureSearchsku')]"
+          },
+          "properties":{
+            "replicaCount": 1,
+            "partitionCount": 1
+          }
+      },
+      {
+        "apiVersion": "2015-08-01",
+        "type": "Microsoft.Web/sites",
+        "name": "[variables('functionAppName')]",
+        "location": "[resourceGroup().location]",
+        "kind": "functionapp",            
+        "dependsOn": [
+            "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+            "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+            "[resourceId('Microsoft.Search/searchServices', parameters('azureSearchname'))]",
+            "[resourceId('Microsoft.CognitiveServices/accounts/', parameters('visionAccountName'))]"
+        ],
+        "properties": {
+            "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+            "siteConfig": {
+                "appSettings": [
+                    {
+                        "name": "AzureWebJobsDashboard",
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+                    },
+                    {
+                        "name": "AzureWebJobsStorage",
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+                    },
+                    {
+                        "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+                    },
+                    {
+                        "name": "WEBSITE_CONTENTSHARE",
+                        "value": "[toLower(variables('functionAppName'))]"
+                    },
+                    {
+                        "name": "FUNCTIONS_EXTENSION_VERSION",
+                        "value": "~1"
+                    },
+                    {
+                        "name": "IMAGE_BLOB_CONNECTION_STRING",
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
+                    },
+                    {
+                        "name": "IMAGE_AZURE_STORAGE_ACCOUNT_NAME",
+                        "value": "[parameters('storageAccountName')]"
+                    },
+                    {
+                        "name": "IMAGE_BLOB_STORAGE_ACCOUNT_KEY",
+                        "value": "[listKeys(variables('storageAccountid'),'2015-05-01-preview').key1]"
+                    },
+                    {
+                        "name": "VISION_API_KEY",
+                        "value": "[listKeys(variables('cognitiveservicesid'),'2016-02-01-preview').key1]"
+                    },
+                    {
+                        "name": "VISION_API_REGION",
+                        "value": "[resourceGroup().location]"
+                    },
+                    {
+                        "name": "ENTITY_LINKING_API_KEY",
+                        "value": "REPLACEME"
+                    },
+                    {
+                        "name": "AZURE_SEARCH_SERVICE_NAME",
+                        "value": "[parameters('azureSearchname')]"
+                    },
+                    {
+                        "name": "AZURE_SEARCH_ADMIN_KEY",
+                        "value": "[listAdminKeys(variables('azuresearchid'), '2015-08-19').PrimaryKey]"
+                    },
+                    {
+                        "name": "IMAGE_BLOB_STORAGE_CONTAINER",
+                        "value": "images"
+                    },
+                    {
+                        "name": "AZURE_SEARCH_INDEX_NAME",
+                        "value": "docs"
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "type": "Microsoft.Web/serverfarms",
+        "apiVersion": "2015-04-01",
+        "name": "[variables('hostingPlanName')]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+            "name": "[variables('hostingPlanName')]",
+            "computeMode": "Dynamic",
+            "sku": "Dynamic"
+        }
+    },
+    {
+        "type": "Microsoft.CognitiveServices/accounts",
+        "sku": {
+          "name": "[parameters('SKU')]"
+        },
+        "kind": "ComputerVision",
+        "name": "[parameters('visionAccountName')]",
+        "apiVersion": "2016-02-01-preview",
+        "location": "[resourceGroup().location]",
+        "properties": {}
+      }  
+    ]
+  }
+  

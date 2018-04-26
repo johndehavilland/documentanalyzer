@@ -1,0 +1,33 @@
+﻿html, body {
+   width:90%;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+.toolbar {
+    height: 35px;
+    box-sizing: border-box;
+    padding: 5px 5px 0;
+}
+
+    .toolbar .logo {
+        float: left;
+        margin-right: 5px;
+        font-family: Verdana, sans-serif;
+        font-weight: bold;
+    }
+
+    .toolbar .separator {
+        display: inline;
+        margin-right: 5px;
+        border-right: 2px solid #7f7f7f;
+    }
+
+.container {
+    float: left;
+   
+    box-sizing: border-box;
+    padding: 5px;
+}

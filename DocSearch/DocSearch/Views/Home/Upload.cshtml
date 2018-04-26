@@ -1,0 +1,92 @@
+﻿@{
+    /**/
+
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/Content/main.css" />
+
+
+    <title>Document Upload</title>
+</head>
+
+<body>
+
+    <div id="app">
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container-fluid">
+
+
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="https://aka.ms/jfkfiles" style="float: left; padding: 5px;">
+                            <img src="/Content/jfk-files.png" style="max-height: 40px;">
+
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 style="color:white">Upload some files</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <a class="navbar-brand pagelabel" href="/Home/Index">Search</a>
+
+                    </div>
+
+
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-offset-4 col-md-4">
+                    <div class="upload-form">
+                        @using (Html.BeginForm("Upload", "Home", FormMethod.Post,
+                        new { enctype = "multipart/form-data" }))
+                        {
+                            <input type="file" name="uploadedFiles" multiple>
+                            <p>Drag your files here or click in this area.</p>
+                            <button type="submit">Upload</button>
+                        }
+
+                    </div>
+                </div>
+                <div class="row">
+                    @{
+                        if (ViewBag.filesUploaded != null)
+                        {
+                            <b>Uploaded files:</b>
+                            foreach (string file in ViewBag.filesUploaded)
+                            {
+                                <li>@file</li>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $('form input').change(function () {
+                $('form p').text(this.files.length + " file(s) selected");
+            });
+        });
+    </script>
+</body>
+</html>
+
+

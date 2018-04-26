@@ -1,0 +1,134 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/azsearch.js@0.0.21/dist/AzSearch.css">
+
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+    <!-- hocr Proofreader -->
+    <link rel="stylesheet" href="/Content/fonts.css" />
+    <link rel="stylesheet" href="/Content/main.css" />
+    <link rel="stylesheet" href="/Content/editor.css" />
+    <link rel="stylesheet" href="/Content/hocr-proofreader.css" />
+    <link rel="stylesheet" href="/Content/tooltipster.bundle.css" />
+    <link rel="stylesheet" href="/Content/tooltipster-sideTip-light.min.css" />
+    <link rel="stylesheet" href="/Content/tooltipster-sideTip-noir.min.css" />
+    <link rel="stylesheet" href="/Content/tooltipster-sideTip-shadow.min.css" />
+
+    <script src="/Scripts/hocr-proofreader.js"></script>
+    <script src="/Scripts/main.js"></script>
+
+    <script src="//d3js.org/d3.v3.min.js"></script>
+
+    <title>Document Analyzer</title>
+</head>
+
+<body>
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" style="width: 98%; height: 95%;" role="document">
+            <div class="modal-content" style="height: 100%;">
+                <div class="modal-body" style="width: 100%; height: 100%;">
+                    <div class="toolbar">
+                        <button id="toggle-layout-image">Image/Text</button>
+                        <div class="separator"></div>
+                        <span>Zoom:</span>
+                        <button id="zoom-page-full">Full Page</button>
+                        <button id="zoom-page-width">Page Width</button>
+                        <button id="zoom-original">Original</button>
+                        <button id="download-original">Download</button>
+                        <div class="separator"></div>
+                        <button id="button-save">Save</button>
+                    </div>
+                    <div id="layout-container" class="container" style="width: 50%;"></div>
+                    <div id="editor-container" class="container" style="width: 50%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app">
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#facetPanel" aria-expanded="false"
+                            aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <div class="row">
+                        <div>
+                            <a href="https://aka.ms/jfkfiles" style="float: left; padding: 5px;">
+                                <img src="/Content/jfk-files.png" style="max-height: 40px;">
+                            </a>
+                        </div>
+                        <div id="searchBox" class="col-mid-8 col-sm-8 col-xs-6"></div>
+                        <div class="pagelabel">
+                            <a class="navbar-brand pagelabel" href="/Home/Upload" style="margin-left: 10px; padding-top: 8px; margin-right: 10px;">Upload</a>
+                            <form class="navbar-form" role="search">
+                                <span class="input-group-btn">
+                                    <button class="searchBox__button btn" type="button" style="height:32px; padding:0px;border-radius: 3px;" onclick="toggleGraph()">
+                                        <img src="/Content/graph.png" style="height:100%;" />
+                                    </button>
+                                </span>
+                            </form>
+                        </div>
+                        <div id="navbar" class="navbar-collapse collapse">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid">
+            <div class="row">
+
+                <div id="facetPanel" class="col-sm-3 col-md-3 sidebar collapse">
+                    <ul class="nav nav-sidebar">
+                        <div className="panel panel-primary behclick-panel">
+                            <div id="entitiesFacet"></div>
+                        </div>
+                    </ul>
+                </div>
+
+                <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 results_section">
+                    <div id="fdGraph" style="display:none; border-bottom:1px solid #eee; height: 1000px; width:100%; margin-left: -20px;background: #f5f5f5; overflow: hidden; position: fixed; z-index: 1000"></div>
+                    <div id="results" class="row placeholders" style="max-width: 900px; margin-left: auto; margin-right: auto;">
+                    </div>
+                    <div id="pager" class="row">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384 Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+        <script src="/Scripts/tooltipster.bundle.js"></script>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/react/15.5.0/react.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/react/15.5.0/react-dom.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/redux/3.6.0/redux.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/azsearch.js@0.0.21/dist/AzSearch.bundle.js"></script>
+  
+    <script src="/Scripts/graph.js"></script>
+    <script src="/Scripts/search.js"></script>
+</body>
+</html>
