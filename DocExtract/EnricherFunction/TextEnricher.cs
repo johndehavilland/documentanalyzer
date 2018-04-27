@@ -26,10 +26,10 @@ namespace EnricherFunction
             try
             {
                 log.Info($"C# Blob trigger function Processed blob\n Name:{name}");
-                var searchServiceName = System.Environment.GetEnvironmentVariable("SEARCH_SERVICE_NAME");
-                var searchServiceKey = System.Environment.GetEnvironmentVariable("SEARCH_SERVICE_KEY");
-                var searchIndexName = System.Environment.GetEnvironmentVariable("SEARCH_INDEX");
-                var entityAPIKey = System.Environment.GetEnvironmentVariable("ENTITY_API_KEY");
+                var searchServiceName = System.Environment.GetEnvironmentVariable("AZURE_SEARCH_SERVICE_NAME");
+                var searchServiceKey = System.Environment.GetEnvironmentVariable("AZURE_SEARCH_ADMIN_KEY");
+                var searchIndexName = System.Environment.GetEnvironmentVariable("AZURE_SEARCH_INDEX_NAME");
+                var entityAPIKey = System.Environment.GetEnvironmentVariable("ENTITY_LINKING_API_KEY");
                 _httpClient = new HttpClient();
                 _httpClient.DefaultRequestHeaders.Add("api-key", searchServiceKey);
                 var serviceClient = new SearchServiceClient(searchServiceName, new SearchCredentials(searchServiceKey));
