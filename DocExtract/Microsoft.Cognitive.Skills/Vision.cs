@@ -242,13 +242,13 @@ namespace Microsoft.Cognitive.Skills
         public string text { get; set; }
 
 
-        public IEnumerable<Point> GetPoints()
+        public IEnumerable<System.Drawing.Point> GetPoints()
         {
             for (int i = 0; i < boundingBox.Length; i += 2)
             {
-                yield return new Point(boundingBox[i], boundingBox[i + 1]);
+                yield return new System.Drawing.Point(boundingBox[i], boundingBox[i + 1]);
             }
-            yield return new Point(boundingBox[0], boundingBox[1]);
+            yield return new System.Drawing.Point(boundingBox[0], boundingBox[1]);
         }
 
         public int CenterY { get { return StartY + (Height / 2); } }
