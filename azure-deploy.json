@@ -66,11 +66,16 @@
           "S3",
           "S4"
         ]
+      },
+      "functionAppName":{
+         "type": "string",
+        "metadata": {
+          "description": "Name for Function Apps"
+        } 
       }
     },
     "variables": {
-        "hostingPlanName" : "docextractor1", 
-        "functionAppName": "docextractorapp1",
+        "hostingPlanName" : "docextracthost", 
         "storageAccountid": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "cognitiveservicesid": "[concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/', parameters('visionAccountName'))]",
         "azuresearchid":"[resourceId('Microsoft.Search/searchServices', parameters('azureSearchname'))]"
@@ -154,7 +159,7 @@
       {
         "apiVersion": "2015-08-01",
         "type": "Microsoft.Web/sites",
-        "name": "[variables('functionAppName')]",
+        "name": "[parameters('functionAppName')]",
         "location": "[resourceGroup().location]",
         "kind": "functionapp",            
         "dependsOn": [
@@ -181,7 +186,7 @@
                     },
                     {
                         "name": "WEBSITE_CONTENTSHARE",
-                        "value": "[toLower(variables('functionAppName'))]"
+                        "value": "[toLower(parameters('functionAppName'))]"
                     },
                     {
                         "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -222,6 +227,10 @@
                     {
                         "name": "IMAGE_BLOB_STORAGE_CONTAINER",
                         "value": "images"
+                    },
+                    {
+                        "name": "PDF_BLOB_STORAGE_CONTAINER",
+                        "value": "pdf"
                     },
                     {
                         "name": "AZURE_SEARCH_INDEX_NAME",

@@ -68,7 +68,7 @@ namespace EnricherFunction
                 {
                     Metadata = "",
                     Text = myBlob,
-                    LinkedEntities = entityColl
+                    Entities = entityColl
                         .OrderByDescending(g => g.Value)
                         .Select(f => f.Key)
                         .ToList(),

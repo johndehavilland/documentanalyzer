@@ -41,11 +41,12 @@ namespace EnricherFunction
             cosmosDb = new AnnotationStore();
 
             // read the list of cia-cryptonymns
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("EnricherFunction.cia-cryptonyms.json"))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                cryptonymns = JsonConvert.DeserializeObject<Dictionary<string,string>>(reader.ReadToEnd());
-            }
+            //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("EnricherFunction.cia-cryptonyms.json"))
+            //var json = File.ReadAllText(Path.Combine(context.FunctionAppDirectory, "CreateIndex.json"));
+            //using (StreamReader reader = new StreamReader(stream))
+            //{
+            //    cryptonymns = JsonConvert.DeserializeObject<Dictionary<string,string>>(reader.ReadToEnd());
+            //}
         }
 
 
@@ -127,10 +128,18 @@ namespace EnricherFunction
         }
 
         [FunctionName("index-document-blob-trigger")]
-        public static async Task BlobTriggerIndexDocument([BlobTrigger(Config.LIBRARY_BLOB_STORAGE_CONTAINER + "/{name}", Connection = "IMAGE_BLOB_CONNECTION_STRING")]Stream blobStream, string name, TraceWriter log)
+        public static async Task BlobTriggerIndexDocument([BlobTrigger("imagedocs/{name}", Connection = "IMAGE_BLOB_CONNECTION_STRING")]Stream blobStream, string name, TraceWriter log, ExecutionContext context)
         {
-            
-            await Run(blobStream, name, log);
+            try
+            {
+                var json = File.ReadAllText(Path.Combine(context.FunctionAppDirectory, "cia-cryptonyms.json"));
+                cryptonymns = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                await Run(blobStream, name, log);
+            }
+            catch(Exception e)
+            {
+                log.Error(e.Message, e);
+            }
         }
 
 
@@ -171,7 +180,7 @@ namespace EnricherFunction
 
                             outRecord.data["metadata"] = searchDocument.Metadata;
                             outRecord.data["text"] = searchDocument.Text;
-                            outRecord.data["entities"] = searchDocument.LinkedEntities;
+                            outRecord.data["entities"] = searchDocument.Entities;
                         }
                     }
                     catch (Exception e)
@@ -316,6 +325,7 @@ namespace EnricherFunction
                 (ocr, hw, vis) => GetLinkedEntitiesAsync(ocr.Text, hw.Text, vis.Description.Captions[0].Text),
                 cogOcr, handwriting, vision);
 
+
             // combine the data as an annotated document
             var cryptonyms = skillSet.AddSkill("cia-cryptonyms",
                 ocr => DetectCIACryptonyms(ocr.Text),
@@ -379,7 +389,7 @@ namespace EnricherFunction
             {
                 Metadata = document.Metadata,
                 Text = document.Text,
-                LinkedEntities = annotations
+                Entities = annotations
                      .SelectMany(a => a.Get<EntityLink[]>("linked-entities") ?? new EntityLink[0])
                      .GroupBy(l => l.Name)
                      .OrderByDescending(g => g.Max(l => l.Score))

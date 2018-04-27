@@ -51,6 +51,6 @@ namespace EnricherFunction
         [IsFilterable]
         [IsFacetable]
         [JsonProperty("entities")]
-        public List<string> LinkedEntities { get; set; } = new List<string>();
+        public List<string> Entities { get; set; } = new List<string>();
     }
 }

@@ -74,7 +74,7 @@ namespace EnricherFunction
                 }
                 else
                 {
-                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference(Environment.GetEnvironmentVariable("IMAGE_BLOB_STORAGE_CONTAINER"));
+                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference(Environment.GetEnvironmentVariable("IMAGE_DOC_BLOB_STORAGE_CONTAINER"));
                     destinationContainer.CreateIfNotExists();
                     CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
                     outputBlob.StartCopy(myBlob); 
@@ -82,6 +82,11 @@ namespace EnricherFunction
             }
             catch(Exception e)
             {
+                //assume pdf
+                var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference(Environment.GetEnvironmentVariable("PDF_BLOB_STORAGE_CONTAINER"));
+                destinationContainer.CreateIfNotExists();
+                CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
+                outputBlob.StartCopy(myBlob);
                 log.Error(e.Message, e);
             }
         }

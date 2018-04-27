@@ -2,7 +2,6 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    padding-top: 70px;
 }
 
 h3 {
@@ -14,6 +13,8 @@ h3 {
     height: 100%;
     background: #f0f0f0;
 }
+
+
 
 .toolbar {
     height: 35px;
@@ -40,6 +41,11 @@ h3 {
     height: calc(100% - 35px);
     box-sizing: border-box;
     padding: 5px;
+}
+
+searchResults__result {
+    font-weight:700;
+    padding-bottom:10px;
 }
 
 .searchResults__result img {
@@ -135,6 +141,4 @@ div.stretchy-wrapper {
     padding: 3px;
 }
 
-.nav-sidebar {
-    font-size: 9pt;
-}
+
