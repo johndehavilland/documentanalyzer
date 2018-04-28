@@ -45,7 +45,7 @@ namespace Microsoft.Cognitive.Skills
             //The shared access signature will be valid immediately.
             SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
             sasConstraints.SharedAccessStartTime = DateTimeOffset.UtcNow.AddMinutes(-5);
-            sasConstraints.SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddHours(1);
+            sasConstraints.SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddYears(5);
             sasConstraints.Permissions = SharedAccessBlobPermissions.Read;
 
             //Generate the shared access signature on the blob, setting the constraints directly on the signature.
