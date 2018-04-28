@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Web;
 
 namespace DocSearch
@@ -61,6 +63,8 @@ namespace DocSearch
 
         public JObject Search(string json)
         {
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
             var response = searchHelper.Post("/indexes/" + indexName + "/docs/search", json);
             return JObject.Parse(response);
         }

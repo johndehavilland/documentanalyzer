@@ -120,9 +120,10 @@ function OnSearch(searchState, postBody) {
 
     return fetch("/api/search",
         {
-            mode: "cors",
+            mode: "no-cors",
+            redirect: 'follow',
+            credentials: 'same-origin',
             headers: {
-                "api-key": searchState.config.queryKey,
                 "Content-Type": "application/json"
             },
             method: "POST",
