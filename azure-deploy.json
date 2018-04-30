@@ -75,7 +75,7 @@
       }
     },
     "variables": {
-        "hostingPlanName" : "docextracthost", 
+        "hostingPlanName" : "[uniqueString(subscription().subscriptionId)]", 
         "storageAccountid": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "cognitiveservicesid": "[concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/', parameters('visionAccountName'))]",
         "azuresearchid":"[resourceId('Microsoft.Search/searchServices', parameters('azureSearchname'))]"
@@ -87,7 +87,9 @@
         "type": "Microsoft.Web/serverfarms",
         "location": "[resourceGroup().location]",
         "apiVersion": "2014-06-01",
-        "dependsOn": [ ],
+        "dependsOn": [ 
+            "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]"
+        ],
         "tags": {
           "displayName": "App Service Plan"
         },
