@@ -3,17 +3,17 @@
 This application supports analyzing documents, using Azure Cognitive Services to extract additional information such as entities, handwriting to text and images to text, and image captioning for a richer search experience.
 
 Currently this demo supports:
-
-PDF - text based
-PDF - image based
-Images
+* PDF - text based
+* PDF - image based
+* Images
 
 ## Setup
 
 1. Deploy the infrastructure components:
-<a href="https://azuredeploy.net/?repository=https://github.com/johndehavilland/documentanalyzer" target="_blank">
-    <img src="http://azuredeploy.net/deploybutton.png"/>
-</a>
+    <a href="https://azuredeploy.net/?repository=https://github.com/johndehavilland/documentanalyzer" target="_blank">
+        <img src="http://azuredeploy.net/deploybutton.png"/>
+    </a>
+
 2. Go to the [entity linking site](https://labs.cognitive.microsoft.com/en-us/project-entity-linking) and subscribe. Grab Key 1 as we will need for the next step.
 3. In the Azure Portal, go to the resource group created in 1 and find the FunctionApp. Open the FunctionApp and look for *Application Settings*.
 4. Look for the following *Application Setting* called **ENTITY_LINKING_API_KEY** and update the value with the key from 2.
