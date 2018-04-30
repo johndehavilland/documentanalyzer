@@ -20,6 +20,7 @@ namespace Microsoft.Cognitive.Skills
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(blobConnectionString);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             libraryContainer = blobClient.GetContainerReference(containerName);
+            libraryContainer.CreateIfNotExists();
         }
 
         public async Task<string> UploadImageToLibrary(Stream stream, string name, bool overwrite = false)

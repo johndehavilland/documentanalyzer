@@ -66,7 +66,7 @@ namespace EnricherFunction
                 log.Info("Found " + imageCount + " images and " + pageNum + " pages");
                 if (imageCount < (pageNum * 0.5))
                 {
-                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference(Environment.GetEnvironmentVariable("PDF_BLOB_STORAGE_CONTAINER"));
+                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("pdf");
                     destinationContainer.CreateIfNotExists();
                     CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
                     outputBlob.StartCopy(myBlob);
@@ -74,7 +74,7 @@ namespace EnricherFunction
                 }
                 else
                 {
-                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference(Environment.GetEnvironmentVariable("IMAGE_DOC_BLOB_STORAGE_CONTAINER"));
+                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("imagedocs");
                     destinationContainer.CreateIfNotExists();
                     CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
                     outputBlob.StartCopy(myBlob); 
@@ -83,7 +83,7 @@ namespace EnricherFunction
             catch(Exception e)
             {
                 //assume pdf
-                var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference(Environment.GetEnvironmentVariable("PDF_BLOB_STORAGE_CONTAINER"));
+                var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("pdf");
                 destinationContainer.CreateIfNotExists();
                 CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
                 outputBlob.StartCopy(myBlob);

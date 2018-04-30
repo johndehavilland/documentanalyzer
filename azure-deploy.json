@@ -212,7 +212,7 @@
                     },
                     {
                         "name": "VISION_API_REGION",
-                        "value": "[resourceGroup().location]"
+                        "value": "[concat(resourceGroup().location,'.api.cognitive.microsoft.com')]"
                     },
                     {
                         "name": "ENTITY_LINKING_API_KEY",
@@ -237,6 +237,10 @@
                     {
                         "name": "AZURE_SEARCH_INDEX_NAME",
                         "value": "docs"
+                    },
+                    {
+                        "name": "blobstorage",
+                        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2015-05-01-preview').key1)]"
                     }
                 ]
             }

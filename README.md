@@ -24,9 +24,11 @@ Currently this demo supports:
 9. Navigate to the WebApp code deploy page: https://<webapp_name>.scm.azurewebsites.net/ZipDeploy
 10. Drag and drop the WebApp zip file into the file area on the ZipDeploy page.
 11. In the Azure portal, go to the Web App and find the Authentication tab.
-12. Under the authentication Tab setup authentication using the express option. As part of this, make sure to change *Action to take when request to authenticated* to **Azure Active Directory**. You will also choose to create a new Azure AD App.
-12. Now navigate to your website. It should prompt you with an Authentication screen and an Authorization screen.
-13. After logging in you should be able to test out the document upload process by uploading a document via the UI. After a minute or so this document should be searchable.
+12. Under the authentication Tab setup authentication. Change *Action to take when request to authenticated* to **Azure Active Directory**. 
+13. Choose Azure Active Directory and **Express**. This will prompt you to create a new Azure AD App - keep the default settings and press Save.
+14. Make sure to save your authentication credentials.
+15. Now navigate to your website. It should prompt you with an Authentication screen and an Authorization screen.
+16. After logging in you should be able to test out the document upload process by uploading a document via the UI. After a minute or so this document should be searchable.
 
 ## Additional Notes
 You can upload single or multiple documents via the front end website. If you want to upload a large number of documents more efficiently then you can do it directly to the documents container of the storage account using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/).
