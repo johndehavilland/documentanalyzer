@@ -11,6 +11,8 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.ProjectOxford.EntityLinking;
 using Microsoft.ProjectOxford.EntityLinking.Contract;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace EnricherFunction
 {
@@ -80,7 +82,17 @@ namespace EnricherFunction
             catch(Exception e)
             {
                 log.Error(e.Message, e);
-            }
+                string error = e.Message + Environment.NewLine + e.ToString();
+                log.Error(e.Message, e);
+                //upload to error bucket
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("blobstorage"));
+                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+                CloudBlobContainer container = blobClient.GetContainerReference("error-docs");
+                container.CreateIfNotExists();
+                CloudBlockBlob blobErr = container.GetBlockBlobReference(name + "-errdetails-" + DateTime.Now.ToFileTimeUtc().ToString() + ".txt");
+                blobErr.UploadText(error);
+            
+        }
         }
 
         private static async Task AddToIndex(string name, SearchDocument searchDocument)

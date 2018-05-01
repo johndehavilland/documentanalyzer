@@ -18,6 +18,8 @@ using Microsoft.ProjectOxford.Vision;
 using System.Reflection;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace EnricherFunction
 {
@@ -138,7 +140,17 @@ namespace EnricherFunction
             }
             catch(Exception e)
             {
+                string error = e.Message + Environment.NewLine + e.ToString();
                 log.Error(e.Message, e);
+                //upload to error bucket
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("blobstorage"));
+                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+                CloudBlobContainer container = blobClient.GetContainerReference("error-docs");
+                container.CreateIfNotExists();
+                CloudBlockBlob blob = container.GetBlockBlobReference(name);
+                blob.UploadFromStream(blobStream);
+                CloudBlockBlob blobErr = container.GetBlockBlobReference(name + "-errdetails-"+DateTime.Now.ToFileTimeUtc().ToString()+".txt");
+                blobErr.UploadText(error);
             }
         }
 
@@ -341,8 +353,7 @@ namespace EnricherFunction
 
         public static async Task Run(Stream blobStream, string name, TraceWriter log)
         {
-            try
-            {
+           
                 log.Info($"Processing blob:{name}");
 
                 // Process the document and extract annotations
@@ -354,11 +365,7 @@ namespace EnricherFunction
                 // Create Search Document and add it to the index
                 SearchDocument searchDocument = CreateSearchDocument(name, annotations);
                 await AddToIndex(name, searchDocument, log);
-            }
-            catch(Exception e)
-            {
-                log.Error(e.Message, e);
-            }
+           
         }
 
         private static async Task<IEnumerable<Annotation>> ProcessDocument(Stream blobStream)

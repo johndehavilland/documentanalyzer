@@ -62,14 +62,23 @@ namespace EnricherFunction
                             }
                         }
                     }
-                }
-                log.Info("Found " + imageCount + " images and " + pageNum + " pages");
-                if (imageCount < (pageNum * 0.5))
-                {
-                    var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("pdf");
-                    destinationContainer.CreateIfNotExists();
-                    CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
-                    outputBlob.StartCopy(myBlob);
+
+                    log.Info("Found " + imageCount + " images and " + pageNum + " pages");
+                    if(pageNum == 0 || (imageCount < (pageNum * 0.5)))
+                    {
+                        var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("pdf");
+                        destinationContainer.CreateIfNotExists();
+                        CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
+                        outputBlob.StartCopy(myBlob);
+
+                    }
+                    else
+                    {
+                        var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("imagedocs");
+                        destinationContainer.CreateIfNotExists();
+                        CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
+                        outputBlob.StartCopy(myBlob);
+                    }
 
                 }
                 else
@@ -77,8 +86,9 @@ namespace EnricherFunction
                     var destinationContainer = myBlob.Container.ServiceClient.GetContainerReference("imagedocs");
                     destinationContainer.CreateIfNotExists();
                     CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
-                    outputBlob.StartCopy(myBlob); 
+                    outputBlob.StartCopy(myBlob);
                 }
+                
             }
             catch(Exception e)
             {
