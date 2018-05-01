@@ -10,6 +10,7 @@ using System.Linq;
 using BitMiracle.LibTiff.Classic;
 using PdfSharp.Pdf.Filters;
 using System.Runtime.InteropServices;
+using FreeImageAPI;
 
 namespace Microsoft.Cognitive.Skills
 {
@@ -50,6 +51,7 @@ namespace Microsoft.Cognitive.Skills
 
         private static IEnumerable<PageImage> GetPdfPages(Stream stream)
         {
+            stream.Position = 0;
             PdfDocument document = PdfReader.Open(stream);
 
             // Iterate pages
@@ -183,12 +185,26 @@ namespace Microsoft.Cognitive.Skills
 
                         imgData = d.decodeJBIG2(imgData);
                         break;
-
+                    case "/JPXDecode":
+                        Stream stream = new MemoryStream(imgData);
+                        FIBITMAP dib = FreeImage.LoadFromStream(stream);
+                        //save the image out to disk    
+                        FreeImage.Save(FREE_IMAGE_FORMAT.FIF_JPEG, dib, "test.jpg", FREE_IMAGE_SAVE_FLAGS.JPEG_QUALITYNORMAL);
+                        //or even turn it into a normal Bitmap for later use
+                        Bitmap bitmap = FreeImage.GetBitmap(dib);
+                        imgData = ImageToByte(bitmap);
+                        break;
                     default:
                         throw new Exception("Dont know how to decode PDF image type of " + filter);
                 }
 
                 return ImageHelper.ConvertTiffToBmps(new MemoryStream(imgData)).First();
+            }
+
+            public static byte[] ImageToByte(Image img)
+            {
+                ImageConverter converter = new ImageConverter();
+                return (byte[])converter.ConvertTo(img, typeof(byte[]));
             }
 
             private Bitmap BmpFromRawData(byte[] imgData)

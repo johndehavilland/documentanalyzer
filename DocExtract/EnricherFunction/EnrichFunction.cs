@@ -20,6 +20,8 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.IO;
 
 namespace EnricherFunction
 {
@@ -130,26 +132,32 @@ namespace EnricherFunction
         }
 
         [FunctionName("index-document-blob-trigger")]
-        public static async Task BlobTriggerIndexDocument([BlobTrigger("imagedocs/{name}", Connection = "IMAGE_BLOB_CONNECTION_STRING")]Stream blobStream, string name, TraceWriter log, ExecutionContext context)
+        public static async Task BlobTriggerIndexDocument([BlobTrigger("imagedocs/{name}", Connection = "IMAGE_BLOB_CONNECTION_STRING")]CloudBlockBlob blob, string name, TraceWriter log, ExecutionContext context)
         {
             try
             {
-                var json = File.ReadAllText(Path.Combine(context.FunctionAppDirectory, "cia-cryptonyms.json"));
-                cryptonymns = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                await Run(blobStream, name, log);
+                using (MemoryStream mem = new MemoryStream())
+                {
+                    
+                    blob.DownloadToStream(mem);
+                    mem.Position = 0;
+                    var json = File.ReadAllText(Path.Combine(context.FunctionAppDirectory, "cia-cryptonyms.json"));
+                    cryptonymns = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                    
+                    await Run(mem, name, log);
+                }
             }
             catch(Exception e)
             {
                 string error = e.Message + Environment.NewLine + e.ToString();
                 log.Error(e.Message, e);
                 //upload to error bucket
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("blobstorage"));
-                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-                CloudBlobContainer container = blobClient.GetContainerReference("error-docs");
-                container.CreateIfNotExists();
-                CloudBlockBlob blob = container.GetBlockBlobReference(name);
-                blob.UploadFromStream(blobStream);
-                CloudBlockBlob blobErr = container.GetBlockBlobReference(name + "-errdetails-"+DateTime.Now.ToFileTimeUtc().ToString()+".txt");
+                var destinationContainer = blob.Container.ServiceClient.GetContainerReference("error-docs");
+                destinationContainer.CreateIfNotExists();
+                CloudBlockBlob outputBlob = destinationContainer.GetBlockBlobReference(name);
+                outputBlob.StartCopy(blob);
+
+                CloudBlockBlob blobErr = destinationContainer.GetBlockBlobReference(name + "-errdetails-"+DateTime.Now.ToFileTimeUtc().ToString()+".txt");
                 blobErr.UploadText(error);
             }
         }
