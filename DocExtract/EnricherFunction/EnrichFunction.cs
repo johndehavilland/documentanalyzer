@@ -149,8 +149,19 @@ namespace EnricherFunction
             }
             catch(Exception e)
             {
+                
                 string error = e.Message + Environment.NewLine + e.ToString();
-                log.Error(e.Message, e);
+
+                if (e is ClientException)
+                {
+                    var clientexp = e as ClientException;
+                    if (clientexp.Error != null)
+                    {
+                        log.Error(clientexp.Error.Message, e);
+                        error = clientexp.Error.Message + Environment.NewLine + clientexp.ToString();
+                    }
+                }
+                    log.Error(e.Message, e);
                 //upload to error bucket
                 var destinationContainer = blob.Container.ServiceClient.GetContainerReference("error-docs");
                 destinationContainer.CreateIfNotExists();
@@ -361,7 +372,11 @@ namespace EnricherFunction
 
         public static async Task Run(Stream blobStream, string name, TraceWriter log)
         {
-           
+            if(cryptonymns == null)
+            {
+                var json = File.ReadAllText(Path.Combine("cia-cryptonyms.json"));
+                cryptonymns = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            }
                 log.Info($"Processing blob:{name}");
 
                 // Process the document and extract annotations

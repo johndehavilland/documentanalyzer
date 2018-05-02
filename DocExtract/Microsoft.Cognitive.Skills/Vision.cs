@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Cognitive.Skills
@@ -94,6 +95,7 @@ namespace Microsoft.Cognitive.Skills
 
         public Task<AnalysisResult> AnalyzeImageAsync(string url, VisualFeature[] features)
         {
+            Thread.Sleep(500);
             return visionClient.AnalyzeImageAsync(url, features);
         }
 
