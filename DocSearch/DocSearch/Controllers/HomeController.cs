@@ -56,11 +56,11 @@ namespace DocSearch.Controllers
             return View("Upload");
         }
 
-        private CloudBlobContainer GetCloudBlobContainer()
+        private CloudBlobContainer GetCloudBlobContainer(string containerName)
         {
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["StorageAccountConnectionString"]);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer container = blobClient.GetContainerReference("documents");
+            CloudBlobContainer container = blobClient.GetContainerReference(containerName);
             container.CreateIfNotExists();
 
             return container;
@@ -70,7 +70,7 @@ namespace DocSearch.Controllers
         public void UploadBlob(HttpPostedFileBase file)
         {
 
-            CloudBlobContainer container = GetCloudBlobContainer();
+            CloudBlobContainer container = GetCloudBlobContainer("documents");
             CloudBlockBlob blob = container.GetBlockBlobReference(file.FileName);
             blob.UploadFromStream(file.InputStream);
 
@@ -79,7 +79,7 @@ namespace DocSearch.Controllers
         public void DownloadBlob(string name)
         {
             string orig_name = name.Replace(".txt","");
-            CloudBlobContainer container = GetCloudBlobContainer();
+            CloudBlobContainer container = GetCloudBlobContainer("pdf");
             var blob = container.GetBlobReferenceFromServer(orig_name);
 
             var memStream = new MemoryStream();
@@ -91,21 +91,35 @@ namespace DocSearch.Controllers
             Response.BinaryWrite(memStream.ToArray());
         }
 
-        public FileContentResult GetPdf(string name)
+        public ActionResult GetPdf(string name)
         {
+            try
+            {
+                string orig_name = name.Replace(".txt", "");
+                CloudBlobContainer container = GetCloudBlobContainer("pdf");
+                var blob = container.GetBlobReferenceFromServer(orig_name);
 
-            string orig_name = name.Replace(".txt", "");
-            CloudBlobContainer container = GetCloudBlobContainer();
-            var blob = container.GetBlobReferenceFromServer(orig_name);
-
-            var memStream = new MemoryStream();
-            blob.DownloadToStream(memStream);
-            var doc = memStream.ToArray();
+                var memStream = new MemoryStream();
+                blob.DownloadToStream(memStream);
+                var doc = memStream.ToArray();
 
 
-            string mimeType = "application/pdf";
-    Response.AppendHeader("Content-Disposition", "inline; filename=" + orig_name);
-            return File(doc, mimeType);
+                string mimeType = "application/pdf";
+                Response.AppendHeader("Content-Disposition", "inline; filename=" + orig_name);
+                return File(doc, mimeType);
+            }
+            catch(Exception ex)
+            {
+                if (ex.Message.Contains("404"))
+                {
+                    return new HttpNotFoundResult();
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(500, "An error occurred trying to get the file");
+                }
+
+            }
         }
     }
 }
