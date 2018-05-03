@@ -197,7 +197,11 @@ namespace Microsoft.Cognitive.Skills
                     }
                 }
             }
-
+            if (result == null)
+            {
+                result = new OcrResult();
+            }
+            
             return result;
         }
     }
@@ -221,6 +225,7 @@ namespace Microsoft.Cognitive.Skills
             {
                 return string.Join(" ", lines.SelectMany(l => l.words).Select(w => w.text));
             }
+
         }
     }
 
