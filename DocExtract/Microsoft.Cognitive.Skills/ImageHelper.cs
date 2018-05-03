@@ -107,12 +107,24 @@ namespace Microsoft.Cognitive.Skills
                 lnNewWidth = (int)lnTemp;
             }
 
-            // if we are going to end up with a larger image just return what we have
-            if (lnHeight * lnWidth > loBMP.Width * loBMP.Height)
+            if (loBMP.Width > 50 && loBMP.Height > 50)
             {
-                return loBMP;
+                // if we are going to end up with a larger image just return what we have
+                if (lnHeight * lnWidth > loBMP.Width * loBMP.Height)
+                {
+                    return loBMP;
+                }
             }
 
+            if(lnNewWidth < 50)
+            {
+                lnNewWidth = lnWidth;
+            }
+
+            if (lnNewHeight < 50)
+            {
+                lnNewHeight = lnHeight;
+            }
 
             // *** This code creates cleaner (though bigger) thumbnails and properly
             // *** and handles GIF files better by generating a white background for
@@ -181,8 +193,10 @@ namespace Microsoft.Cognitive.Skills
                 for (int frame = 0; frame < frameNum; frame++)
                 {
                     // yeild each frame as a bitmap. 
-                    imageFile.SelectActiveFrame(frameDimensions, frame);
-                    yield return new Bitmap(imageFile);
+                    
+                        imageFile.SelectActiveFrame(frameDimensions, frame);
+                        yield return new Bitmap(imageFile);
+                    
                 }
 
             }

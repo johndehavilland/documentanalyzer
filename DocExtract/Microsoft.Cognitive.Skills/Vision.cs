@@ -55,8 +55,7 @@ namespace Microsoft.Cognitive.Skills
 
         public async Task<OcrResult> GetText(Stream stream, string url = null, string name = null)
         {
-            try
-            {
+           
                 
                 var visionResult = await (stream != null ? visionClient.RecognizeTextAsync(stream, "en", true) : visionClient.RecognizeTextAsync(url, "en", true));
             
@@ -80,11 +79,7 @@ namespace Microsoft.Cognitive.Skills
                 Orientation = visionResult.Orientation
             };
             return result;
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
+            
         }
 
         public Task<OcrResult> GetVision(string url)

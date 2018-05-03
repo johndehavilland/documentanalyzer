@@ -90,5 +90,22 @@ namespace DocSearch.Controllers
             Response.AddHeader("Content-Length", blob.Properties.Length.ToString());
             Response.BinaryWrite(memStream.ToArray());
         }
+
+        public FileContentResult GetPdf(string name)
+        {
+
+            string orig_name = name.Replace(".txt", "");
+            CloudBlobContainer container = GetCloudBlobContainer();
+            var blob = container.GetBlobReferenceFromServer(orig_name);
+
+            var memStream = new MemoryStream();
+            blob.DownloadToStream(memStream);
+            var doc = memStream.ToArray();
+
+
+            string mimeType = "application/pdf";
+    Response.AppendHeader("Content-Disposition", "inline; filename=" + orig_name);
+            return File(doc, mimeType);
+        }
     }
 }

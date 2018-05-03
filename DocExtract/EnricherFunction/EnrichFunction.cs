@@ -131,6 +131,7 @@ namespace EnricherFunction
             }
         }
 
+        [Singleton]
         [FunctionName("index-document-blob-trigger")]
         public static async Task BlobTriggerIndexDocument([BlobTrigger("imagedocs/{name}", Connection = "IMAGE_BLOB_CONNECTION_STRING")]CloudBlockBlob blob, string name, TraceWriter log, ExecutionContext context)
         {

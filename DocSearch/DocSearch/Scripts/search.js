@@ -61,26 +61,37 @@ function showDocument(index) {
     }
 
     result.text = result.text.replace(/\n/g, "<br />");
-
+    $('#pdf').remove();
+    //$('.layout').attr('width', '100%');
+    //$('layout').attr('height', '100%');
+    $('.layout').show();
     hocrProofreader.currentPage = null;
-    if (result.metadata === "empty") {
+    if (result.metadata === "empty" || result.pdf) {
         result.metadata = result.text;
-    }
-    hocrProofreader.setHocr(result.metadata, "", result.pageNum, result.keywords);
-    //hocrProofreader.setHocr(result.text, "", "first", result.entities);
-    hocrProofreader.setZoom('page-full');
+        result.pdf = true;
+        var newElement = "<embed height='100%' width = '100%' src='/Home/GetPdf/?name=" + result.file + "' id='pdf' />";
+        $('.layout').hide();
+        $('#layout-container').prepend(newElement);
+        
 
+    }
+    
+        hocrProofreader.setHocr(result.metadata, "", result.pageNum, result.keywords);
+        hocrProofreader.setZoom('page-full');
+    
     $('#download-original').click(function () {
         window.location = "/Home/DownloadBlob/?name=" + result.file;
     });
-
+    
     $('#myModal').modal('show');
 
     $('#myModal').one('shown.bs.modal', function () {
         //document.getElementsByTagName('h2')[3].scrollIntoView();
-        hocrProofreader.editorIframe.contentDocument.body.getElementsByClassName('highlight')[0].scrollIntoView({ behavior: "instant", block: "start" });
+        //hocrProofreader.editorIframe.contentDocument.body.getElementsByClassName('highlight')[0].scrollIntoView({ behavior: "instant", block: "start" });
+        hocrProofreader.editorIframe.contentDocument.body.children[result.pageNum].scrollIntoView({ behavior: "instant", block: "start" });
         //hocrProofreader.editorIframe.contentDocument.body.children[result.pageNum].scrollIntoView({ behavior: "instant", block: "start" });
     });
+
 
 }
 
