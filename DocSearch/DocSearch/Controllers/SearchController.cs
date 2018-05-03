@@ -78,7 +78,7 @@ namespace DocSearch.Controllers
             //List<string> orderby = new List<string>();
             //orderby.Add(sort);
             List<string> highlight = new List<string>();
-            highlight.Add("text");
+            highlight.Add("text-1000");
 
             //parameters.OrderBy = orderby.AsReadOnly();
             parameters.HighlightFields = highlight.AsReadOnly();

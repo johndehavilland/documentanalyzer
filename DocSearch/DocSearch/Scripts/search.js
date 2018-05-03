@@ -87,8 +87,12 @@ function showDocument(index) {
 
     $('#myModal').one('shown.bs.modal', function () {
         //document.getElementsByTagName('h2')[3].scrollIntoView();
-        //hocrProofreader.editorIframe.contentDocument.body.getElementsByClassName('highlight')[0].scrollIntoView({ behavior: "instant", block: "start" });
-        hocrProofreader.editorIframe.contentDocument.body.children[result.pageNum].scrollIntoView({ behavior: "instant", block: "start" });
+        if (hocrProofreader.editorIframe.contentDocument.body.getElementsByClassName('highlight').length > 0) {
+            hocrProofreader.editorIframe.contentDocument.body.getElementsByClassName('highlight')[0].scrollIntoView({ behavior: "instant", block: "start" });
+        } else {
+            hocrProofreader.editorIframe.contentDocument.body.children[result.pageNum].scrollIntoView({ behavior: "instant", block: "start" });
+        }
+        //
         //hocrProofreader.editorIframe.contentDocument.body.children[result.pageNum].scrollIntoView({ behavior: "instant", block: "start" });
     });
 
@@ -155,7 +159,7 @@ automagic.addSearchBox("searchBox");
 automagic.addCheckboxFacet("entitiesFacet", "entities", "collection");
 
 // get hightlight snippets for text
-automagic.store.updateSearchParameters({ highlight: "text", top: 10, searchMode: "all" });
+automagic.store.updateSearchParameters({ highlight: "text-100", top: 10, searchMode: "all" });
 
 //$("#facetPanel").change(OnSearch);
 automagic.store.setSearchCallback(OnSearch);

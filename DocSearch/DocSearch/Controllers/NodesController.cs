@@ -22,7 +22,7 @@ namespace DocSearch.Controllers
             // Calculate nodes for 3 levels
             JObject dataset = new JObject();
             int MaxEdges = 20;
-            int MaxLevels = 3;
+            int MaxLevels = 4;
             int CurrentLevel = 1;
             int CurrentNodes = 0;
 
@@ -53,7 +53,7 @@ namespace DocSearch.Controllers
                     SearchMode = SearchMode.Any,
                     Top = 0,
                     Select = new List<String>() { "id" },
-                    Facets = new List<String>() { "entities, count:" + 30 },
+                    Facets = new List<String>() { "entities, count:" + 10 },
                     QueryType = QueryType.Full
                 };
 
