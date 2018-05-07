@@ -31,7 +31,7 @@ namespace EnricherFunction
         static Vision visionClient;
         static HttpClient httpClient = new HttpClient();
         static ISearchIndexClient indexClient;
-        static EntityLinkingServiceClient linkedEntityClient;
+        static Entities entitiesClient;
         static AnnotationStore cosmosDb;
         static Dictionary<string, string> cryptonymns;
 
@@ -41,16 +41,8 @@ namespace EnricherFunction
             visionClient = new Vision(Config.VISION_API_KEY, Config.VISION_API_REGION);
             var serviceClient = new SearchServiceClient(Config.AZURE_SEARCH_SERVICE_NAME, new SearchCredentials(Config.AZURE_SEARCH_ADMIN_KEY));
             indexClient = serviceClient.Indexes.GetClient(Config.AZURE_SEARCH_INDEX_NAME);
-            linkedEntityClient = new EntityLinkingServiceClient(Config.ENTITY_LINKING_API_KEY, "https://api.labs.cognitive.microsoft.com");
+            entitiesClient = new Entities(Config.ENTITY_LINKING_API_KEY, Config.ENTITY_LINKING_API_ENDPOINT);
             cosmosDb = new AnnotationStore();
-
-            // read the list of cia-cryptonymns
-            //using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("EnricherFunction.cia-cryptonyms.json"))
-            //var json = File.ReadAllText(Path.Combine(context.FunctionAppDirectory, "CreateIndex.json"));
-            //using (StreamReader reader = new StreamReader(stream))
-            //{
-            //    cryptonymns = JsonConvert.DeserializeObject<Dictionary<string,string>>(reader.ReadToEnd());
-            //}
         }
 
 
@@ -272,20 +264,25 @@ namespace EnricherFunction
             return Task.FromResult(ciaWords.ToArray());
         }
 
-        private static Task<EntityLink[]> GetLinkedEntitiesAsync(params string[] txts)
+        private static Task<IList<EntityDocument>> GetLinkedEntitiesAsync(string ocrtxts, string hwtxt, Description desc)
         {
-            var txt = string.Join(Environment.NewLine, txts);
+            string captionTxt = "";
+            if(desc.Captions.Length > 0)
+            {
+                captionTxt = desc.Captions[0].Text;
+            }
+            var txt = string.Join(Environment.NewLine, new string[] { ocrtxts, hwtxt, captionTxt });
             if (string.IsNullOrWhiteSpace(txt))
-                return Task.FromResult<EntityLink[]>(null);
+                return Task.FromResult<IList<EntityDocument>>(null);
 
             // truncate each page to 10k charactors
-            if (txt.Length > 10000)
-                txt = txt.Substring(0, 10000);
+            if (txt.Length > 5000)
+                txt = txt.Substring(0, 5000);
 
-            return linkedEntityClient.LinkAsync(txt);
+            return entitiesClient.GetEntitiesAsync(txt);
         }
 
-        private static async Task<AnnotatedPage> CombineMetadata(OcrResult ocr, OcrResult hw, AnalysisResult vis, EntityLink[] cia, EntityLink[] entities, ImageReference img)
+        private static async Task<AnnotatedPage> CombineMetadata(OcrResult ocr, OcrResult hw, AnalysisResult vis, EntityLink[] cia, IList<EntityDocument> entities, ImageReference img)
         {
             // The handwriting result also included OCR text but OCR will produce better results on typed documents
             // so take the result that produces the most text.  Consider combining them by region to take the best of each.
@@ -353,8 +350,9 @@ namespace EnricherFunction
                 resizedImage);
 
             // extract entities linked to wikipedia using the Entity Linking Service
+            
             var linkedEntities = skillSet.AddSkill("linked-entities",
-                (ocr, hw, vis) => GetLinkedEntitiesAsync(ocr.Text, hw.Text, vis.Description.Captions[0].Text),
+                (ocr, hw, vis) => GetLinkedEntitiesAsync(ocr.Text, hw.Text, vis.Description),
                 cogOcr, handwriting, vision);
 
 
@@ -421,9 +419,9 @@ namespace EnricherFunction
                 Metadata = document.Metadata,
                 Text = document.Text,
                 Entities = annotations
-                     .SelectMany(a => a.Get<EntityLink[]>("linked-entities") ?? new EntityLink[0])
-                     .GroupBy(l => l.Name)
-                     .OrderByDescending(g => g.Max(l => l.Score))
+                     .SelectMany(a => a.Get<IList<EntityDocument>>("linked-entities")[0].entities ?? new List<Entity>())
+                     .GroupBy(l => l.name)
+                     .OrderByDescending(g => g.Max(l => l.matches.Count))
                      .Select(l => l.Key)
                      .Where(l => !string.IsNullOrEmpty(l))
                      .ToList(),

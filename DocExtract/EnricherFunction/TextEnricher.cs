@@ -9,6 +9,7 @@ using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Cognitive.Skills;
 using Microsoft.ProjectOxford.EntityLinking;
 using Microsoft.ProjectOxford.EntityLinking.Contract;
 using Microsoft.WindowsAzure.Storage;
@@ -31,7 +32,6 @@ namespace EnricherFunction
                 var searchServiceName = System.Environment.GetEnvironmentVariable("AZURE_SEARCH_SERVICE_NAME");
                 var searchServiceKey = System.Environment.GetEnvironmentVariable("AZURE_SEARCH_ADMIN_KEY");
                 var searchIndexName = System.Environment.GetEnvironmentVariable("AZURE_SEARCH_INDEX_NAME");
-                var entityAPIKey = System.Environment.GetEnvironmentVariable("ENTITY_LINKING_API_KEY");
                 _httpClient = new HttpClient();
                 _httpClient.DefaultRequestHeaders.Add("api-key", searchServiceKey);
                 var serviceClient = new SearchServiceClient(searchServiceName, new SearchCredentials(searchServiceKey));
@@ -44,25 +44,27 @@ namespace EnricherFunction
                     SendRequest(serviceUri, json, HttpMethod.Put, "2016-09-01-Preview");
                 }
                 indexClient = serviceClient.Indexes.GetClient(searchIndexName);
-                linkedEntityClient = new EntityLinkingServiceClient(entityAPIKey, "https://api.labs.cognitive.microsoft.com");
 
-                var texts = ChunksUpto(myBlob, 10000);
-
+                var texts = ChunksUpto(myBlob, 4999);
+                var entityClient = new Entities(Config.ENTITY_LINKING_API_KEY, Config.ENTITY_LINKING_API_ENDPOINT);
                 var entityColl = new Dictionary<string, int>();
                 foreach (var pageText in texts)
                 {
-                    var entities = GetLinkedEntitiesAsync(pageText).GetAwaiter().GetResult();
-                    foreach (var entity in entities)
+                    var entities = entityClient.GetEntitiesAsync(pageText).GetAwaiter().GetResult();
+                    if (entities.Count > 0)
                     {
-                        if (entityColl.ContainsKey(entity.Name))
+                        foreach (var entity in entities[0].entities)
                         {
-                            entityColl[entity.Name]++;
-                        }
-                        else
-                        {
-                            entityColl.Add(entity.Name, 1);
-                        }
+                            if (entityColl.ContainsKey(entity.name))
+                            {
+                                entityColl[entity.name]++;
+                            }
+                            else
+                            {
+                                entityColl.Add(entity.name, 1);
+                            }
 
+                        }
                     }
                 }
 

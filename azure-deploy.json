@@ -22,6 +22,13 @@
             }
         },
 
+        "textAnalyticsName": {
+            "type": "string",
+            "metadata": {
+                "description": "Text Analytics Name"
+            }
+        },
+
       "webAppSKU": {
         "type": "string",
         "defaultValue": "Basic",
@@ -56,7 +63,7 @@
     "SKU": {
         "type": "string",
         "metadata": {
-          "description": "SKU for Vision API"
+          "description": "SKU for Vision and Text Analytics API"
         },
         "defaultValue": "S1",
         "allowedValues": [
@@ -77,7 +84,8 @@
     "variables": {
         "hostingPlanName" : "[uniqueString(subscription().subscriptionId)]", 
         "storageAccountid": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-        "cognitiveservicesid": "[concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/', parameters('visionAccountName'))]",
+        "viscognitiveservicesid": "[concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/', parameters('visionAccountName'))]",
+        "txtcognitiveservicesid": "[concat(resourceGroup().id,'/providers/','Microsoft.CognitiveServices/accounts/', parameters('textAnalyticsName'))]",
         "azuresearchid":"[resourceId('Microsoft.Search/searchServices', parameters('azureSearchname'))]"
 
     },
@@ -208,7 +216,7 @@
                     },
                     {
                         "name": "VISION_API_KEY",
-                        "value": "[listKeys(variables('cognitiveservicesid'),'2016-02-01-preview').key1]"
+                        "value": "[listKeys(variables('viscognitiveservicesid'),'2016-02-01-preview').key1]"
                     },
                     {
                         "name": "VISION_API_REGION",
@@ -216,7 +224,11 @@
                     },
                     {
                         "name": "ENTITY_LINKING_API_KEY",
-                        "value": "REPLACEME"
+                        "value": "[listKeys(variables('txtcognitiveservicesid'),'2016-02-01-preview').key1]"
+                    },
+                    {
+                        "name": "ENTITY_LINKING_API_ENDPOINT",
+                        "value": "[concat(resourceGroup().location,'.api.cognitive.microsoft.com')]"
                     },
                     {
                         "name": "AZURE_SEARCH_SERVICE_NAME",
@@ -267,7 +279,18 @@
         "apiVersion": "2016-02-01-preview",
         "location": "[resourceGroup().location]",
         "properties": {}
-      }  
+      },
+      {
+        "type": "Microsoft.CognitiveServices/accounts",
+        "sku": {
+          "name": "[parameters('SKU')]"
+        },
+        "kind": "TextAnalytics",
+        "name": "[parameters('textAnalyticsName')]",
+        "apiVersion": "2016-02-01-preview",
+        "location": "[resourceGroup().location]",
+        "properties": {}
+      }   
     ]
   }
   
