@@ -17,6 +17,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <None Update="cia-cryptonyms.json">

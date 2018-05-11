@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Cognitive.Skills;
 using EnricherFunction;
+using System.Net.Http;
+using System.Text;
 
 namespace DataEnricher
 {
@@ -33,6 +35,10 @@ namespace DataEnricher
                 }
                 else
                 {
+                    Console.WriteLine("Initializing Services");
+                    InitializeServices();
+
+                    Console.WriteLine("Services have been successfully Initialized");
                     //bool deleteall = false;
                     //var serviceClient = new SearchServiceClient(Config.AZURE_SEARCH_SERVICE_NAME, new SearchCredentials(Config.AZURE_SEARCH_ADMIN_KEY));
                     //var indexClient = serviceClient.Indexes.GetClient(Config.AZURE_SEARCH_INDEX_NAME);
@@ -128,49 +134,56 @@ namespace DataEnricher
         {
             // create the storage containers if needed
             CloudBlobClient blobClient = CloudStorageAccount.Parse($"DefaultEndpointsProtocol=https;AccountName={Config.IMAGE_AZURE_STORAGE_ACCOUNT_NAME};AccountKey={Config.IMAGE_BLOB_STORAGE_ACCOUNT_KEY};EndpointSuffix=core.windows.net").CreateCloudBlobClient();
-            blobClient.GetContainerReference(Config.IMAGE_BLOB_STORAGE_CONTAINER).CreateIfNotExists(BlobContainerPublicAccessType.Blob);
-            blobClient.GetContainerReference(Config.LIBRARY_BLOB_STORAGE_CONTAINER).CreateIfNotExists(BlobContainerPublicAccessType.Off);
+            blobClient.GetContainerReference(Config.IMAGE_BLOB_STORAGE_CONTAINER).CreateIfNotExists();
+            blobClient.GetContainerReference(Config.LIBRARY_BLOB_STORAGE_CONTAINER).CreateIfNotExists();
 
-            var searchHelper = new AzureSearchHelper(Config.AZURE_SEARCH_SERVICE_NAME, Config.AZURE_SEARCH_ADMIN_KEY);
             var serviceClient = new SearchServiceClient(Config.AZURE_SEARCH_SERVICE_NAME, new SearchCredentials(Config.AZURE_SEARCH_ADMIN_KEY));
 
-            var demoBoost = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DemoBoost.json"));
+            
+            var searchServiceName = Config.AZURE_SEARCH_SERVICE_NAME;
+            var searchServiceKey = Config.AZURE_SEARCH_ADMIN_KEY;
+            var searchIndexName = Config.AZURE_SEARCH_INDEX_NAME;
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("api-key", searchServiceKey);
+            
 
-            // Create the Synonyms
-            Console.WriteLine("Creating Synonym Map");
-            var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AddSynonyms.json"));
-            searchHelper.Put("synonymmaps/cryptonyms", json, "2016-09-01-Preview");
-
-            // create the index if needed
-            //Console.WriteLine("Create the index");
-            //json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CreateIndex.json"));
-            //searchHelper.Put("indexes/" + Config.AZURE_SEARCH_INDEX_NAME, json, "2016-09-01-Preview");
-
-            // Update documents with boost scores
-            //Console.WriteLine("Boosting Documents");
-            //json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DemoBoost.json"));
-            //searchHelper.Post("indexes/" + Config.AZURE_SEARCH_INDEX_NAME + "/docs/index", json);
-
-            // test the pipeline and index
-            Console.WriteLine("Sending a test image through the pipeline");
-            using (var file = File.OpenRead(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "photo.jpg")))
+            if (serviceClient.Indexes.Exists(searchIndexName) == false)
             {
-                EnrichFunction.Run(file, "photo_jpg", log).Wait();
+                var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CreateIndex.json"));
+
+                var serviceUri = new Uri("https://" + searchServiceName + ".search.windows.net/indexes/" + searchIndexName);
+                SendRequest(serviceUri, json, HttpMethod.Put, "2016-09-01-Preview", httpClient);
+            }
+        }
+
+        public static string SendRequest(Uri uri, string json, HttpMethod method, string version, HttpClient httpClient)
+        {
+
+            UriBuilder builder = new UriBuilder(uri);
+            string separator = string.IsNullOrWhiteSpace(builder.Query) ? string.Empty : "&";
+            builder.Query = builder.Query.TrimStart('?') + separator + "api-version=" + version;
+
+            var request = new HttpRequestMessage(method, builder.Uri);
+
+            if (json != null)
+            {
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             }
 
-            Console.WriteLine("Querying the test image");
-            var indexClient = serviceClient.Indexes.GetClient(Config.AZURE_SEARCH_INDEX_NAME);
-            var results = indexClient.Documents.Search("oswald", new SearchParameters()
-            {
-                Facets = new[] { "entities" },
-                HighlightFields = new[] { "text" },
-            });
+            var response = httpClient.SendAsync(request).Result;
 
-            // TODO: Add some additional validations for fields
-            if (results.Results.Count > 0)
-                Console.WriteLine("Item found in index");
-            else
-                Console.WriteLine("Item missing from index");
+            EnsureSuccessfulSearchResponse(response);
+
+            return response.Content.ReadAsStringAsync().Result;
+        }
+
+        private static void EnsureSuccessfulSearchResponse(HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                string error = response.Content == null ? null : response.Content.ReadAsStringAsync().Result;
+                throw new Exception("Search request failed: " + error);
+            }
         }
 
 
