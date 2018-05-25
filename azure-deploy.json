@@ -9,26 +9,6 @@
           "description": "The name of the Web App"
         }
       },
-      "storageAccountName": {
-        "type": "string",
-        "metadata": {
-            "description": "Storage Account Name"
-        }
-    },
-        "visionAccountName": {
-            "type": "string",
-            "metadata": {
-                "description": "Vision Account Name"
-            }
-        },
-
-        "textAnalyticsName": {
-            "type": "string",
-            "metadata": {
-                "description": "Text Analytics Name"
-            }
-        },
-
       "webAppSKU": {
         "type": "string",
         "defaultValue": "Basic",
@@ -50,28 +30,56 @@
       },
       "azureSearchSku": {
         "type": "string",
-        "defaultValue": "standard",
+        "defaultValue": "basic",
         "allowedValues": [
           "free",
-          "standard",
-          "standard2"
+          "basic",
+          "basic"
         ],
         "metadata": {
           "description": "The azure search instance tier."
         }
     },
-    "SKU": {
+      "storageAccountName": {
         "type": "string",
         "metadata": {
-          "description": "SKU for Vision and Text Analytics API"
+            "description": "Storage Account Name"
+        }
+    },
+        "visionAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Vision Account Name"
+            }
+        },
+
+        "textAnalyticsName": {
+            "type": "string",
+            "metadata": {
+                "description": "Text Analytics Name"
+            }
+        },
+    "VisionSKU": {
+        "type": "string",
+        "metadata": {
+          "description": "SKU for Vision "
         },
         "defaultValue": "S1",
         "allowedValues": [
           "F0",
-          "S1",
-          "S2",
-          "S3",
-          "S4"
+          "S1"
+        ]
+      },
+      "TextSKU": {
+        "type": "string",
+        "metadata": {
+          "description": "SKU for Text Analytics"
+        },
+        "defaultValue": "S0",
+        "allowedValues": [
+          "F0",
+          "S0",
+          "S1"
         ]
       },
       "functionAppName":{
@@ -273,7 +281,7 @@
     {
         "type": "Microsoft.CognitiveServices/accounts",
         "sku": {
-          "name": "[parameters('SKU')]"
+          "name": "[parameters('VisionSKU')]"
         },
         "kind": "ComputerVision",
         "name": "[parameters('visionAccountName')]",
@@ -284,7 +292,7 @@
       {
         "type": "Microsoft.CognitiveServices/accounts",
         "sku": {
-          "name": "[parameters('SKU')]"
+          "name": "[parameters('TextSKU')]"
         },
         "kind": "TextAnalytics",
         "name": "[parameters('textAnalyticsName')]",
